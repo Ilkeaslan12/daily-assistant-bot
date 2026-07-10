@@ -4,5 +4,5 @@ openai
 gTTS
 SpeechRecognition
 pydub
-pyhton-multipart
+python-multipart
 pydantic
