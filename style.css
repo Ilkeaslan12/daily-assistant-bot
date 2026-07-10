@@ -1,0 +1,67 @@
+body { 
+    margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+    background-color: #fcfbf8; 
+    background-image: radial-gradient(circle at 50% 0%, rgba(212, 175, 55, 0.15) 0%, transparent 60%);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    color: #333; display: flex; flex-direction: column; height: 100vh; 
+}
+
+#chat-container { 
+    flex: 1; overflow-y: auto; padding: 2rem 1rem; display: flex; flex-direction: column; align-items: center; 
+    justify-content: flex-start; 
+}
+
+#chat-container.empty-state {
+    justify-content: center; 
+}
+
+.message-row { width: 100%; max-width: 768px; display: flex; gap: 1.5rem; margin-bottom: 2rem; }
+
+.avatar { 
+    width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; 
+    font-weight: 600; font-size: 13px; letter-spacing: 0.5px; flex-shrink: 0; 
+}
+.user-avatar { background-color: #e5e4df; color: #4b5563; }
+.ai-avatar { background-color: #d4af37; color: white; } 
+
+.message-content { flex: 1; line-height: 1.6; font-size: 1rem; padding-top: 6px; color: #1f2937; }
+
+#input-area { 
+    padding: 1.5rem; display: flex; justify-content: center; 
+    background: linear-gradient(180deg, rgba(252,251,248,0) 0%, rgba(252,251,248,1) 30%); 
+}
+
+.input-box { 
+    width: 100%; max-width: 768px; display: flex; align-items: center; border: 1px solid #e5e7eb; 
+    border-radius: 0.75rem; padding: 0.5rem; background: #ffffff; box-shadow: 0 4px 15px rgba(0,0,0,0.03); 
+    transition: border-color 0.2s, box-shadow 0.2s; gap: 5px;
+}
+.input-box:focus-within { 
+    border-color: #d4af37; 
+    box-shadow: 0 4px 15px rgba(212,175,55,0.1);
+} 
+
+input[type="text"] { 
+    flex: 1; border: none; outline: none; padding: 0.75rem; font-size: 1rem; background: transparent; 
+}
+
+.icon-btn {
+    background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 0.5rem;
+    color: #9ca3af; transition: color 0.2s, transform 0.1s; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+}
+.icon-btn:hover { color: #d4af37; transform: scale(1.1); }
+.icon-btn.recording { color: #ef4444; animation: pulse 1.5s infinite; } 
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.send-btn { 
+    background-color: transparent; border: none; padding: 0.5rem 1rem; cursor: pointer; 
+    font-size: 1rem; font-weight: 600; color: #6b7280; transition: color 0.2s; 
+}
+.send-btn:hover { color: #d4af37; }

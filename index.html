@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Tech Assistant</title>
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="chat-container" class="empty-state">
+        <div class="message-row">
+            <div class="avatar ai-avatar">AI</div>
+            <div class="message-content">Hello. I am your technical assistant. How can I help you today?</div>
+        </div>
+    </div>
+
+    <div id="input-area">
+        <div class="input-box">
+            <input type="file" id="file-input" style="display: none;" accept="image/*" onchange="handleImageSelect(event)">
+            
+            <button class="icon-btn" onclick="document.getElementById('file-input').click()" title="Upload Image">📎</button>
+            <input type="text" id="user-input" placeholder="Ask a question..." onkeypress="if(event.key === 'Enter') sendMessage()">
+            <button id="mic-btn" class="icon-btn" onclick="toggleRecording()" title="Record Voice">🎤</button>
+            <button class="send-btn" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    
+</body>
+</html>
