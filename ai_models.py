@@ -1,5 +1,10 @@
 from openai import OpenAI
-from config import OPENROUTER_API_KEY
+import os
+
+try:
+    from config import OPENROUTER_API_KEY
+except ImportError:
+    OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 # Initialize OpenRouter client
 client = OpenAI(
