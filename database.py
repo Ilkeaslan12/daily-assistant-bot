@@ -1,7 +1,6 @@
 import psycopg2
 
-# Supabase'den kopyaladığın linki buraya yapıştır
-DB_URL = "postgresql://postgres:[aW7AOZ6pmR83YeLA]@db.qtztimeicupjpsxfpukm.supabase.co:5432/postgres"
+DB_URL = "postgresql://postgres:aW7AOZ6pmR83YeLA@db.qtztimeicupjpsxfpukm.supabase.co:5432/postgres"
 
 def get_connection():
     """Her işlemde veritabanına taze ve güvenli bir bağlantı açar."""
