@@ -1,6 +1,11 @@
 import psycopg2
+import os
 
-DB_URL = "postgresql://postgres:aW7AOZ6pmR83YeLA@db.qtztimeicupjpsxfpukm.supabase.co:5432/postgres"
+try:
+    import config
+    DB_URL = config.DATABASE_URL
+except ImportError:
+    DB_URL = os.getenv("DATABASE_URL")
 
 def get_connection():
     """Her işlemde veritabanına taze ve güvenli bir bağlantı açar."""
