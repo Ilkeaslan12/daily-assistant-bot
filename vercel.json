@@ -3,12 +3,18 @@
     { "src": "main.py", "use": "@vercel/python" },
     { "src": "index.html", "use": "@vercel/static" },
     { "src": "style.css", "use": "@vercel/static" },
-    { "src": "script.js", "use": "@vercel/static" }
+    { "src": "script.js", "use": "@vercel/static" },
+    { "src": "admin.html", "use": "@vercel/static" },
+    { "src": "admin.css", "use": "@vercel/static" },
+    { "src": "admin.js", "use": "@vercel/static" }
   ],
   "rewrites": [
     { "source": "/", "destination": "/index.html" },
+    { "source": "/admin", "destination": "/admin.html" },
     { "source": "/style.css", "destination": "/style.css" },
     { "source": "/script.js", "destination": "/script.js" },
+    { "source": "/admin.css", "destination": "/admin.css" },
+    { "source": "/admin.js", "destination": "/admin.js" },
     { "source": "/(.*)", "destination": "/main.py" }
   ]
 }

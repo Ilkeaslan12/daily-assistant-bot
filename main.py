@@ -10,6 +10,7 @@ from database import (
     get_past_messages,
     save_chat_message,
     save_error,
+    get_admin_dashboard,
 )
 
 from ai_models import generate_bot_response, transcribe_audio
@@ -176,3 +177,23 @@ async def voice_endpoint(
     finally:
         if os.path.exists(file_path):
             os.remove(file_path)
+            
+            
+@app.get("/api/admin")
+async def admin_dashboard():
+    try:
+        return get_admin_dashboard()
+
+    except Exception as error:
+        traceback.print_exc()
+
+        save_error(
+            error_message=str(error),
+            error_type=type(error).__name__,
+            agent_name="admin-dashboard",
+        )
+
+        return {
+            "status": "error",
+            "message": "Unable to load dashboard.",
+        }

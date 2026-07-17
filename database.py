@@ -3,70 +3,33 @@ from supabase import Client, create_client
 
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 
 if not SUPABASE_URL:
     raise RuntimeError("SUPABASE_URL environment variable bulunamadı.")
 
-if not SUPABASE_KEY:
+if not SUPABASE_SERVICE_ROLE_KEY:
     raise RuntimeError(
         "SUPABASE_SERVICE_ROLE_KEY environment variable bulunamadı."
     )
 
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-
-def create_tables():
-
-    return None
-
-
-def get_summary(session_id: str) -> str:
-
-    return ""
-
-
-def get_message_count(session_id: str) -> int:
-
-    response = (
-        supabase.table("chat_logs")
-        .select("id", count="exact")
-        .execute()
-    )
-
-    return response.count or 0
-
-
-def get_messages_for_summary(
-    session_id: str,
-    limit: int = 5,
-) -> list[tuple[str, str]]:
-    response = (
-        supabase.table("chat_logs")
-        .select("user_message,bot_response")
-        .order("created_at", desc=False)
-        .limit(limit)
-        .execute()
-    )
-
-    return [
-        (
-            row.get("user_message", ""),
-            row.get("bot_response", ""),
-        )
-        for row in (response.data or [])
-    ]
-
-
-def save_summary(session_id: str, new_summary: str):
-
-    return None
+supabase: Client = create_client(
+    SUPABASE_URL,
+    SUPABASE_SERVICE_ROLE_KEY,
+)
 
 
 def get_past_messages(
     session_id: str,
     limit: int = 3,
 ) -> list[tuple[str, str]]:
+    """
+    chat_logs tablosundaki son konuşmaları getirir.
+
+    Mevcut tabloda session_id alanı bulunmadığı için
+    tüm kullanıcıların son mesajları arasından getirir.
+    """
     response = (
         supabase.table("chat_logs")
         .select("user_message,bot_response")
@@ -75,22 +38,15 @@ def get_past_messages(
         .execute()
     )
 
+    rows = response.data or []
+
     return [
         (
             row.get("user_message", ""),
             row.get("bot_response", ""),
         )
-        for row in (response.data or [])
+        for row in rows
     ]
-
-
-def save_api_request(
-    request_type: str,
-    detail: str,
-    response: str,
-):
-
-    return None
 
 
 def save_chat_message(
@@ -99,6 +55,12 @@ def save_chat_message(
     user_question: str,
     bot_response: str,
 ):
+    """
+    Kullanıcı mesajını ve bot cevabını chat_logs tablosuna kaydeder.
+
+    session_id ve user_name mevcut tabloda bulunmadığı için
+    yalnızca mevcut sütunlar kaydedilir.
+    """
     supabase.table("chat_logs").insert(
         {
             "user_message": user_question,
@@ -113,7 +75,9 @@ def save_error(
     session_id: str | None = None,
     agent_name: str | None = None,
 ):
-
+    """
+    Hataları error_logs tablosuna kaydeder.
+    """
     details = []
 
     if agent_name:
@@ -135,23 +99,35 @@ def save_error(
         ).execute()
 
     except Exception as logging_error:
-        print(f"Hata kaydı Supabase'e yazılamadı: {logging_error}")
+        print(
+            "Hata kaydı Supabase'e yazılamadı:",
+            logging_error,
+        )
 
 
 def get_admin_dashboard() -> dict:
+    """
+    Admin paneli için mesaj ve hata verilerini getirir.
+    """
     chat_response = (
         supabase.table("chat_logs")
-        .select("*")
+        .select(
+            "id,created_at,user_message,bot_response",
+            count="exact",
+        )
         .order("created_at", desc=True)
-        .limit(1000)
+        .limit(100)
         .execute()
     )
 
     error_response = (
         supabase.table("error_logs")
-        .select("*")
+        .select(
+            "id,created_at,error_type,error_message",
+            count="exact",
+        )
         .order("created_at", desc=True)
-        .limit(500)
+        .limit(100)
         .execute()
     )
 
@@ -159,8 +135,11 @@ def get_admin_dashboard() -> dict:
     error_logs = error_response.data or []
 
     return {
-        "total_messages": len(chat_logs),
-        "total_errors": len(error_logs),
-        "recent_messages": chat_logs[:30],
-        "recent_errors": error_logs[:30],
+        "status": "success",
+        "statistics": {
+            "total_messages": chat_response.count or len(chat_logs),
+            "total_errors": error_response.count or len(error_logs),
+        },
+        "recent_chats": chat_logs,
+        "recent_errors": error_logs,
     }
