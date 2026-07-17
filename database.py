@@ -1,110 +1,166 @@
-import psycopg2
 import os
+from supabase import Client, create_client
 
-try:
-    import config
-    DB_URL = config.DATABASE_URL
-except ImportError:
-    DB_URL = os.getenv("DATABASE_URL")
 
-def get_connection():
-    """Her işlemde veritabanına taze ve güvenli bir bağlantı açar."""
-    return psycopg2.connect(DB_URL)
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+
+if not SUPABASE_URL:
+    raise RuntimeError("SUPABASE_URL environment variable bulunamadı.")
+
+if not SUPABASE_KEY:
+    raise RuntimeError(
+        "SUPABASE_SERVICE_ROLE_KEY environment variable bulunamadı."
+    )
+
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
 
 def create_tables():
-    """Tabloları Supabase üzerinde oluşturur."""
-    with get_connection() as conn:
-        with conn.cursor() as cursor:
-            # PostgreSQL için AUTOINCREMENT yerine SERIAL kullanılır
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS messages (
-                    id SERIAL PRIMARY KEY,
-                    session_id TEXT,
-                    user_name TEXT,
-                    user_question TEXT,
-                    bot_response TEXT,
-                    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            ''')
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS api_requests (
-                    id SERIAL PRIMARY KEY,
-                    request_type TEXT,
-                    request_detail TEXT,
-                    api_response TEXT,
-                    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            ''')
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS session_summaries (
-                    session_id TEXT PRIMARY KEY,
-                    summary TEXT
-                )
-            ''')
-            conn.commit()
+
+    return None
+
 
 def get_summary(session_id: str) -> str:
-    with get_connection() as conn:
-        with conn.cursor() as cursor:
-            # PostgreSQL parametre olarak ? yerine %s kullanır
-            cursor.execute("SELECT summary FROM session_summaries WHERE session_id = %s", (session_id,))
-            row = cursor.fetchone()
-            return row[0] if row else ""
+
+    return ""
+
 
 def get_message_count(session_id: str) -> int:
-    with get_connection() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute("SELECT COUNT(*) FROM messages WHERE session_id = %s", (session_id,))
-            return cursor.fetchone()[0]
 
-def get_messages_for_summary(session_id: str, limit: int = 5) -> list:
-    with get_connection() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute('''
-                SELECT user_question, bot_response 
-                FROM messages 
-                WHERE session_id = %s 
-                ORDER BY id ASC LIMIT %s
-            ''', (session_id, limit))
-            return cursor.fetchall()
+    response = (
+        supabase.table("chat_logs")
+        .select("id", count="exact")
+        .execute()
+    )
+
+    return response.count or 0
+
+
+def get_messages_for_summary(
+    session_id: str,
+    limit: int = 5,
+) -> list[tuple[str, str]]:
+    response = (
+        supabase.table("chat_logs")
+        .select("user_message,bot_response")
+        .order("created_at", desc=False)
+        .limit(limit)
+        .execute()
+    )
+
+    return [
+        (
+            row.get("user_message", ""),
+            row.get("bot_response", ""),
+        )
+        for row in (response.data or [])
+    ]
+
 
 def save_summary(session_id: str, new_summary: str):
-    with get_connection() as conn:
-        with conn.cursor() as cursor:
-            # PostgreSQL için INSERT OR REPLACE karşılığı
-            cursor.execute('''
-                INSERT INTO session_summaries (session_id, summary) 
-                VALUES (%s, %s) 
-                ON CONFLICT (session_id) 
-                DO UPDATE SET summary = EXCLUDED.summary
-            ''', (session_id, new_summary))
-            conn.commit()
 
-def get_past_messages(session_id: str, limit: int = 3) -> list:
-    with get_connection() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute('''
-                SELECT user_question, bot_response 
-                FROM messages 
-                WHERE session_id = %s 
-                ORDER BY id DESC LIMIT %s
-            ''', (session_id, limit))
-            return cursor.fetchall()
+    return None
 
-def save_api_request(request_type: str, detail: str, response: str):
-    with get_connection() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute('''
-                INSERT INTO api_requests (request_type, request_detail, api_response)
-                VALUES (%s, %s, %s)
-            ''', (request_type, detail, response))
-            conn.commit()
 
-def save_chat_message(session_id: str, user_name: str, user_question: str, bot_response: str):
-    with get_connection() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute('''
-                INSERT INTO messages (session_id, user_name, user_question, bot_response)
-                VALUES (%s, %s, %s, %s)
-            ''', (session_id, user_name, user_question, bot_response))
-            conn.commit()
+def get_past_messages(
+    session_id: str,
+    limit: int = 3,
+) -> list[tuple[str, str]]:
+    response = (
+        supabase.table("chat_logs")
+        .select("user_message,bot_response")
+        .order("created_at", desc=True)
+        .limit(limit)
+        .execute()
+    )
+
+    return [
+        (
+            row.get("user_message", ""),
+            row.get("bot_response", ""),
+        )
+        for row in (response.data or [])
+    ]
+
+
+def save_api_request(
+    request_type: str,
+    detail: str,
+    response: str,
+):
+
+    return None
+
+
+def save_chat_message(
+    session_id: str,
+    user_name: str,
+    user_question: str,
+    bot_response: str,
+):
+    supabase.table("chat_logs").insert(
+        {
+            "user_message": user_question,
+            "bot_response": bot_response,
+        }
+    ).execute()
+
+
+def save_error(
+    error_message: str,
+    error_type: str = "UnknownError",
+    session_id: str | None = None,
+    agent_name: str | None = None,
+):
+
+    details = []
+
+    if agent_name:
+        details.append(f"Agent: {agent_name}")
+
+    if session_id:
+        details.append(f"Session: {session_id}")
+
+    details.append(str(error_message))
+
+    complete_message = " | ".join(details)
+
+    try:
+        supabase.table("error_logs").insert(
+            {
+                "error_type": error_type,
+                "error_message": complete_message[:5000],
+            }
+        ).execute()
+
+    except Exception as logging_error:
+        print(f"Hata kaydı Supabase'e yazılamadı: {logging_error}")
+
+
+def get_admin_dashboard() -> dict:
+    chat_response = (
+        supabase.table("chat_logs")
+        .select("*")
+        .order("created_at", desc=True)
+        .limit(1000)
+        .execute()
+    )
+
+    error_response = (
+        supabase.table("error_logs")
+        .select("*")
+        .order("created_at", desc=True)
+        .limit(500)
+        .execute()
+    )
+
+    chat_logs = chat_response.data or []
+    error_logs = error_response.data or []
+
+    return {
+        "total_messages": len(chat_logs),
+        "total_errors": len(error_logs),
+        "recent_messages": chat_logs[:30],
+        "recent_errors": error_logs[:30],
+    }
