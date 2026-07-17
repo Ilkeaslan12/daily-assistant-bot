@@ -1,7 +1,6 @@
-// Determine API base URL based on environment
-const API_BASE_URL = window.location.hostname === "localhost" 
-    ? "http://127.0.0.1:8000" 
-    : "https://your-vercel-app-url.vercel.app"; // Update this after deployment
+const API_BASE_URL = window.location.hostname === "localhost"
+    ? "http://127.0.0.1:8000"
+    : "";
 
 const sessionId = "session-" + Math.floor(Math.random() * 1000);
 let isRecording = false;
